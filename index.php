@@ -12,89 +12,9 @@ $dotenv = new Dotenv();
 $dotenv->load(__DIR__.'/.env');
 
 
-function getPlayerTwitter($id) {
-    switch ($id) {
-        case 1:
-            return "@Aurelien_Sama";
-        case 2:
-            return "@AlkasymMc";
-        case 3:
-            return "@AlpZz80";
-        case 4:
-            return "@AypierreMc";
-        case 5:
-            return "@Bahason_";
-        case 6:
-            return "@clintwood245";
-        case 7:
-            return "@DavLec1";
-        case 8:
-            return "@Edorocky";
-        case 9:
-            return "@goldawnyt";
-        case 10:
-            return "@TheGuill84";
-        case 11:
-            return "@Ika_vg";
-        case 12:
-            return "@JimmyBoyyy_";
-        case 13:
-            return "@KeyOps14";
-        case 14:
-            return "@kisukeisflo";
-        case 15:
-            return "@LetoVII_Gaming";
-        case 16:
-            return "@Magicknup";
-        case 17:
-            return "@majorrrsalty";
-        case 18:
-            return "@Mayu_Kow";
-        case 19:
-            return "@MrMLDEG";
-        case 20:
-            return "@_OraNN_";
-        case 21:
-            return "@RedToxx";
-        case 22:
-            return "@R3li3nt";
-        case 23:
-            return "@The_Boune";
-        case 24:
-            return "@Roi_Louis_";
-        case 25:
-            return "@Steelorse";
-        case 26:
-            return "@Tungstene74";
-        case 27:
-            return "@Letsaudric1";
-        case 28:
-            return "@Vartac_";
-        case 29:
-            return "@TheWotan1283";
-        case 30:
-            return "@zakarum78";
-        case 31:
-            return "@Zanzag_Video";
-        case 32:
-            return "@Zedh74mc";
-        case 33:
-            return "@Zeptuna";
-        case 34:
-            return "@Nems_Mt";
-        case 35:
-            return "@MylaCraft";
-        case 36:
-            return "@Shoukachu";
-    }
-
-    return "Holycube";
-}
-
-
 function getPlayer($list, $id) {
     foreach ($list as $player) {
-        if($player["id"] === $id) {
+        if($player["@id"] === $id) {
             return $player;
         }
     }
@@ -124,7 +44,6 @@ function sendTwitter($message) {
 }
 
 
-
 $filename_players = "data/" . $_ENV["FILENAME_PLAYERS"];
 $filename_videos = "data/" . $_ENV["FILENAME_VIDEOS"];
 
@@ -142,11 +61,9 @@ if(file_exists($filename_videos)) {
 }
 
 
-
 // Fetch API
 $players = json_decode(file_get_contents("https://api.holycube.fr/players"), true);
 $videos = json_decode(file_get_contents("https://api.holycube.fr/videos"), true);
-
 
 
 // send last videos
@@ -159,11 +76,8 @@ if($last_videos !== null) {
 
     foreach ($videos["hydra:member"] as $video) {
         if(!in_array($video["videoId"], $ids)) {
-
-            $playerID = (int)str_replace("/players/", "", $video["player"]);
-            $twitter = getPlayerTwitter($playerID);
-
-            sendTwitter(join(" ", ["Nouvelle vidéo de", $twitter, $video["title"], "https://www.youtube.com/watch?v=".$video["videoId"], "#HolyCube", "#Minecraft"]));
+            $player = getPlayer($players["hydra:member"], $video["player"]);
+            sendTwitter(join(" ", ["Nouvelle vidéo de", "@".$player["twitterName"], $video["title"], "https://www.youtube.com/watch?v=".$video["videoId"], "#HolyCube", "#Minecraft"]));
         }
     }
 }
@@ -172,11 +86,10 @@ if($last_videos !== null) {
 // send player is live
 if($last_players !== null) {
     foreach ($players["hydra:member"] as $player) {
-        $last_players_data = getPlayer($last_players["hydra:member"], $player["id"]);
+        $last_players_data = getPlayer($last_players["hydra:member"], $player["@id"]);
         
         if(!empty($last_players_data) and !empty($player["twitchName"]) and $player["isLiveHolycube"] and !$last_players_data["isLiveHolycube"]) {
-            $twitter = getPlayerTwitter($player["id"]);
-            sendTwitter(join(" ", ["En live", $twitter, $player["liveName"], "https://www.twitch.tv/". $player["twitchName"], "#HolyCube", "#Minecraft"]));
+            sendTwitter(join(" ", ["En live", "@".$player["twitterName"], $player["liveName"], "https://www.twitch.tv/". $player["twitchName"], "#HolyCube", "#Minecraft"]));
         }
     }
 }

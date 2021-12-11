@@ -35,6 +35,28 @@ function getPlayer($list, $id)
 }
 
 
+function autoRetweet($twitterAPI, $last_tweet, $filename_last_tweet)
+{
+    $tweets = $twitterAPI->request('statuses/home_timeline', 'GET', ['count' => 100, 'since_id' => $last_tweet]);
+
+    if (isset($tweets[0])) {
+        $last_tweet_file = fopen($filename_last_tweet, 'w');
+        fwrite($last_tweet_file, $tweets[0]->id);
+        fclose($last_tweet_file);
+    }
+
+    foreach ($tweets as $tweet) {
+        if (strpos(strtolower($tweet->text), 'holycube') !== false and $tweet->user->screen_name !== "HolyCubeBot") {
+
+            if ($_ENV["ENVIRONMENT"] === "production") {
+                $twitterAPI->request('statuses/retweet/' . $tweet->id, 'POST', []);
+            }
+            echo "Retweet : " . $tweet->id . " : " . $tweet->text . "<br>";
+        }
+    }
+}
+
+
 function deleteOldTweet($twitterAPI)
 {
     $tweets = $twitterAPI->load(Twitter::ME);
@@ -69,14 +91,19 @@ function sendTwitter($twitterAPI, $message)
     }
 }
 
-
+$filename_last_tweet = "data/" . $_ENV["FILENAME_LAST_TWEET"];
 $filename_players = "data/" . $_ENV["FILENAME_PLAYERS"];
 $filename_videos = "data/" . $_ENV["FILENAME_VIDEOS"];
 
 
 // get last API data
+$last_tweet = null;
 $last_players = null;
 $last_videos = null;
+
+if (file_exists($filename_last_tweet)) {
+    $last_tweet = file_get_contents($filename_last_tweet);
+}
 
 if (file_exists($filename_players)) {
     $last_players = json_decode(file_get_contents($filename_players), true);
@@ -91,6 +118,8 @@ if (file_exists($filename_videos)) {
 $players = json_decode(file_get_contents("https://www.holycube.fr/players"), true);
 $videos = json_decode(file_get_contents("https://www.holycube.fr/videos"), true);
 
+
+autoRetweet($twitterAPI, $last_tweet, $filename_last_tweet);
 
 // send last videos
 if ($last_videos !== null) {

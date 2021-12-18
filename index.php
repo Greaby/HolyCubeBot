@@ -66,7 +66,7 @@ function deleteOldTweet($twitterAPI)
         if (strpos($tweet->text, 'En live') === 0) {
 
 
-            if (time() - strtotime($tweet->created_at) > 43200) { # greater than 12 hours
+            if (time() - strtotime($tweet->created_at) > 21600) { # greater than 6 hours
                 if ($_ENV["ENVIRONMENT"] === "production") {
                     $twitterAPI->destroy($tweet->id);
                 }

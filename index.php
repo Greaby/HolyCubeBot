@@ -59,14 +59,13 @@ function autoRetweet($twitterAPI, $last_tweet, $filename_last_tweet)
 
 function deleteOldTweet($twitterAPI)
 {
-    $tweets = $twitterAPI->load(Twitter::ME);
+    $tweets = $twitterAPI->request('statuses/user_timeline', 'GET', ['count' => 200, 'include_rts' => false, 'exclude_replies' => true]);
 
     foreach ($tweets as $tweet) {
 
         if (strpos($tweet->text, 'En live') === 0) {
 
-
-            if (time() - strtotime($tweet->created_at) > 21600) { # greater than 6 hours
+            if (time() - strtotime($tweet->created_at) > 14400) { # greater than 4 hours
                 if ($_ENV["ENVIRONMENT"] === "production") {
                     $twitterAPI->destroy($tweet->id);
                 }
